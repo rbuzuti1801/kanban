@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  kanban-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: kanban-task-manager
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kanban.rule=Host(`kanban.localhost`)"
+      - "traefik.http.services.kanban.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - kanban-network
+
+  # Optional: Add a simple database for future features
+  # redis:
+  #   image: redis:alpine
+  #   container_name: kanban-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - kanban-network
+
+networks:
+  kanban-network:
+    driver: bridge
+
+# volumes:
+#   redis_data:
+#     driver: local
